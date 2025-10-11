@@ -1,9 +1,9 @@
 name: agentic_architecture
 description: A production-ready Flutter package for building intelligent agent-based applications with support for single agents, Mixture of Experts (MOE), and pluggable LLM providers.
 version: 0.1.0
-homepage: https://github.com/victoremeka/agentic_architecture
-repository: https://github.com/victoremeka/agentic_architecture
-issue_tracker: https://github.com/victoremeka/agentic_architecture/issues
+homepage: https://github.com/Livingstone99/agentic_architecture
+repository: https://github.com/Livingstone99/agentic_architecture
+issue_tracker: https://github.com/Livingstone99/agentic_architecture/issues
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
