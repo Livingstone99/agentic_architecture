@@ -1,5 +1,6 @@
 import '../core/agent.dart';
 import '../core/exceptions.dart';
+import '../core/logger.dart';
 import '../core/message.dart';
 import '../core/result.dart';
 import 'delegation_strategy.dart';
@@ -61,11 +62,11 @@ class LeadAgent extends Agent {
 
   @override
   Future<AgentResponse> process(AgentRequest request) async {
+    final logger = AgenticLogger(name: 'LeadAgent', enabled: config.enableLogging);
+    
     try {
-      if (config.enableLogging) {
-        print('🎯 Lead agent processing query with ${strategy.name} strategy');
-        print('📋 Available experts: ${experts.map((e) => e.name).join(", ")}');
-      }
+      logger.info('🎯 Lead agent processing query with ${strategy.name} strategy');
+      logger.debug('📋 Available experts: ${experts.map((e) => e.name).join(", ")}');
 
       // Step 1: Analyze query and select expert(s)
       final selectedExperts = await router.selectExperts(
@@ -132,11 +133,10 @@ class LeadAgent extends Agent {
     List<ExpertAgent> experts,
     AgentRequest request,
   ) async {
+    final logger = AgenticLogger(name: 'LeadAgent', enabled: config.enableLogging);
     final expert = experts.first;
 
-    if (config.enableLogging) {
-      print('👤 Executing single expert: ${expert.name}');
-    }
+    logger.info('👤 Executing single expert: ${expert.name}');
 
     final response = await expert.process(request);
     return [expert.toExpertResponse(response)];
@@ -147,9 +147,8 @@ class LeadAgent extends Agent {
     List<ExpertAgent> experts,
     AgentRequest request,
   ) async {
-    if (config.enableLogging) {
-      print('⚡ Executing ${experts.length} experts in parallel');
-    }
+    final logger = AgenticLogger(name: 'LeadAgent', enabled: config.enableLogging);
+    logger.info('⚡ Executing ${experts.length} experts in parallel');
 
     final responses = await Future.wait(
       experts.map((expert) async {
@@ -157,9 +156,8 @@ class LeadAgent extends Agent {
           final response = await expert.process(request);
           return expert.toExpertResponse(response);
         } catch (e) {
-          if (config.enableLogging) {
-            print('⚠️ Expert ${expert.name} failed: $e');
-          }
+          final logger = AgenticLogger(name: 'LeadAgent', enabled: config.enableLogging);
+          logger.warning('⚠️ Expert ${expert.name} failed: $e');
           // Return a failed response instead of throwing
           return ExpertResponse(
             expertId: expert.id,
@@ -182,18 +180,15 @@ class LeadAgent extends Agent {
     List<ExpertAgent> experts,
     AgentRequest request,
   ) async {
-    if (config.enableLogging) {
-      print('🔄 Executing ${experts.length} experts sequentially');
-    }
+    final logger = AgenticLogger(name: 'LeadAgent', enabled: config.enableLogging);
+    logger.info('🔄 Executing ${experts.length} experts sequentially');
 
     final responses = <ExpertResponse>[];
     final contextHistory = <LLMMessage>[...request.history];
 
     for (final expert in experts) {
       try {
-        if (config.enableLogging) {
-          print('  → Querying ${expert.name}');
-        }
+        logger.debug('  → Querying ${expert.name}');
 
         // Each expert gets context from previous experts
         final expertRequest = AgentRequest(
@@ -211,9 +206,7 @@ class LeadAgent extends Agent {
         // Add this expert's response to context for next expert
         contextHistory.add(LLMMessage.assistant(response.content));
       } catch (e) {
-        if (config.enableLogging) {
-          print('⚠️ Expert ${expert.name} failed: $e');
-        }
+        logger.warning('⚠️ Expert ${expert.name} failed: $e');
         // Continue with other experts
       }
     }

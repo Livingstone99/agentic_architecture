@@ -1,5 +1,6 @@
 import '../core/exceptions.dart';
 import '../core/llm_provider.dart';
+import '../core/logger.dart';
 import 'delegation_strategy.dart';
 import 'expert_agent.dart';
 
@@ -23,13 +24,13 @@ class ExpertRouter {
     int maxExperts = 3,
     LLMProvider? leadLLM,
   }) async {
+    final logger = AgenticLogger(name: 'ExpertRouter', enabled: enableLogging);
+    
     if (experts.isEmpty) {
-      throw RoutingException('No experts available for routing');
+      throw const RoutingException('No experts available for routing');
     }
 
-    if (enableLogging) {
-      print('🧭 Routing query with ${strategy.name} strategy');
-    }
+    logger.info('🧭 Routing query with ${strategy.name} strategy');
 
     List<ExpertAgent> selected;
 
@@ -48,10 +49,7 @@ class ExpertRouter {
 
       case DelegationStrategy.intelligent:
         if (leadLLM == null) {
-          if (enableLogging) {
-            print(
-                '⚠️ No LLM provided for intelligent routing, falling back to parallel');
-          }
+          logger.warning('⚠️ No LLM provided for intelligent routing, falling back to parallel');
           selected = _findTopExperts(query, experts, maxExperts);
         } else {
           selected =
@@ -60,10 +58,7 @@ class ExpertRouter {
         break;
     }
 
-    if (enableLogging) {
-      print(
-          '✅ Selected ${selected.length} expert(s): ${selected.map((e) => e.name).join(", ")}');
-    }
+    logger.info('✅ Selected ${selected.length} expert(s): ${selected.map((e) => e.name).join(", ")}');
 
     return selected;
   }
@@ -175,17 +170,15 @@ Expert Name 2
 
       // Fallback to keyword-based if LLM selection failed
       if (selected.isEmpty) {
-        if (enableLogging) {
-          print('⚠️ LLM routing failed, falling back to keyword matching');
-        }
+        final logger = AgenticLogger(name: 'ExpertRouter', enabled: enableLogging);
+        logger.warning('⚠️ LLM routing failed, falling back to keyword matching');
         return _findTopExperts(query, experts, maxExperts);
       }
 
       return selected.take(maxExperts).toList();
     } catch (e) {
-      if (enableLogging) {
-        print('⚠️ LLM routing error: $e, falling back to keyword matching');
-      }
+      final logger = AgenticLogger(name: 'ExpertRouter', enabled: enableLogging);
+      logger.warning('⚠️ LLM routing error: $e, falling back to keyword matching');
       // Fallback to keyword-based routing
       return _findTopExperts(query, experts, maxExperts);
     }

@@ -1,4 +1,5 @@
 import '../core/llm_provider.dart';
+import '../core/logger.dart';
 import '../core/result.dart';
 
 /// Synthesizes responses from multiple expert agents into a single coherent answer.
@@ -49,9 +50,8 @@ class ResponseSynthesizer {
     }
 
     // Multiple experts - synthesize
-    if (enableLogging) {
-      print('🔄 Synthesizing ${expertResponses.length} expert responses');
-    }
+    final logger = AgenticLogger(name: 'ResponseSynthesizer', enabled: enableLogging);
+    logger.info('🔄 Synthesizing ${expertResponses.length} expert responses');
 
     if (leadLLM != null) {
       return await _synthesizeWithLLM(
@@ -159,9 +159,8 @@ Synthesized Response:''';
         },
       );
     } catch (e) {
-      if (enableLogging) {
-        print('⚠️ LLM synthesis failed: $e, falling back to simple synthesis');
-      }
+      final logger = AgenticLogger(name: 'ResponseSynthesizer', enabled: enableLogging);
+      logger.warning('⚠️ LLM synthesis failed: $e, falling back to simple synthesis');
       return _synthesizeSimple(
         originalQuery: originalQuery,
         expertResponses: expertResponses,

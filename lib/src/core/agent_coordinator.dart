@@ -1,5 +1,6 @@
 import 'agent.dart';
 import 'exceptions.dart';
+import 'logger.dart';
 import 'message.dart';
 import 'result.dart';
 
@@ -45,10 +46,11 @@ class AgentCoordinator {
     List<LLMMessage>? history,
     Map<String, dynamic>? context,
   }) async {
+    final logger =
+        AgenticLogger(name: 'AgentCoordinator', enabled: enableLogging);
+
     try {
-      if (enableLogging) {
-        print('🤖 Processing query in ${mode.name} mode: $query');
-      }
+      logger.info('🤖 Processing query in ${mode.name} mode: $query');
 
       final request = AgentRequest(
         query: query,
@@ -72,11 +74,9 @@ class AgentCoordinator {
       final endTime = DateTime.now();
       final duration = endTime.difference(startTime);
 
-      if (enableLogging) {
-        print('✅ Query processed in ${duration.inMilliseconds}ms');
-        if (response.tokenUsage != null) {
-          print('📊 Token usage: ${response.tokenUsage}');
-        }
+      logger.info('✅ Query processed in ${duration.inMilliseconds}ms');
+      if (response.tokenUsage != null) {
+        logger.debug('📊 Token usage: ${response.tokenUsage}');
       }
 
       // Convert response to result
@@ -98,9 +98,7 @@ class AgentCoordinator {
 
       return [result];
     } catch (e, stackTrace) {
-      if (enableLogging) {
-        print('❌ Error processing query: $e');
-      }
+      logger.error('❌ Error processing query: $e');
 
       throw CoordinationException(
         'Failed to process query: $e',
@@ -151,10 +149,12 @@ class AgentCoordinator {
     List<LLMMessage>? history,
     Map<String, dynamic>? context,
   }) async* {
+    final logger =
+        AgenticLogger(name: 'AgentCoordinator', enabled: enableLogging);
+
     try {
-      if (enableLogging) {
-        print('🤖 Processing query (streaming) in ${mode.name} mode: $query');
-      }
+      logger
+          .info('🤖 Processing query (streaming) in ${mode.name} mode: $query');
 
       // For now, just process normally and yield the result
       // TODO: Implement true streaming when agents support it
@@ -168,9 +168,7 @@ class AgentCoordinator {
         yield result;
       }
     } catch (e, stackTrace) {
-      if (enableLogging) {
-        print('❌ Error processing streaming query: $e');
-      }
+      logger.error('❌ Error processing streaming query: $e');
 
       throw CoordinationException(
         'Failed to process streaming query: $e',

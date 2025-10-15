@@ -1,4 +1,5 @@
 import '../core/agent.dart';
+import '../core/logger.dart';
 import '../core/message.dart';
 import '../core/result.dart';
 
@@ -69,6 +70,8 @@ Focus on providing specific, actionable answers within your domain of expertise.
       systemPrompt: expertPrompt,
     );
 
+    final logger =
+        AgenticLogger(name: 'ExpertAgent:$name', enabled: config.enableLogging);
     var allToolResults = <ToolResult>[];
     var rounds = 0;
 
@@ -76,10 +79,8 @@ Focus on providing specific, actionable answers within your domain of expertise.
     while (response.toolCalls.isNotEmpty && rounds < config.maxToolRounds) {
       rounds++;
 
-      if (config.enableLogging) {
-        print(
-            '🔧 [$name] Tool round $rounds: ${response.toolCalls.length} tools');
-      }
+      logger.debug(
+          '🔧 [$name] Tool round $rounds: ${response.toolCalls.length} tools');
 
       // Execute tools
       final toolResults = await executeTools(response.toolCalls);

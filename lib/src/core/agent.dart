@@ -1,5 +1,6 @@
 import 'exceptions.dart';
 import 'llm_provider.dart';
+import 'logger.dart';
 import 'message.dart';
 import 'result.dart';
 import 'tool.dart';
@@ -180,9 +181,10 @@ class SimpleAgent extends Agent {
       while (response.toolCalls.isNotEmpty && rounds < config.maxToolRounds) {
         rounds++;
 
-        if (config.enableLogging) {
-          print('🔧 Tool round $rounds: ${response.toolCalls.length} tools');
-        }
+        final logger =
+            AgenticLogger(name: 'SimpleAgent', enabled: config.enableLogging);
+        logger
+            .debug('🔧 Tool round $rounds: ${response.toolCalls.length} tools');
 
         // Execute tools
         final toolResults = await executeTools(response.toolCalls);
